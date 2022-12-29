@@ -27,6 +27,8 @@
     "start": "mm-snap watch"
   },
   "devDependencies": {
+    "@emurgo/cardano-serialization-lib-asmjs": "^11.2.1",
+    "@emurgo/cardano-serialization-lib-nodejs": "^11.2.1",
     "@lavamoat/allow-scripts": "^2.0.3",
     "@metamask/auto-changelog": "^2.6.0",
     "@metamask/eslint-config": "^10.0.0",
@@ -45,6 +47,8 @@
     "eslint-plugin-jsdoc": "^39.2.9",
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prettier": "^4.2.1",
+    "patch-package": "^6.5.0",
+    "postinstall-postinstall": "^2.1.0",
     "prettier": "^2.2.1",
     "prettier-plugin-packagejson": "^2.2.11",
     "rimraf": "^3.0.2",
@@ -63,6 +67,7 @@
     "bech32-converting": "^1.0.9",
     "blakejs": "^1.2.1",
     "install": "^0.13.0",
-    "npm": "^9.2.0"
+    "npm": "^9.2.0",
+    "text-encoding": "^0.7.0"
   }
 }
