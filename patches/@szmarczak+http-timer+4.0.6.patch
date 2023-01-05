@@ -1,0 +1,23 @@
+diff --git a/node_modules/@szmarczak/http-timer/dist/source/index.js b/node_modules/@szmarczak/http-timer/dist/source/index.js
+index 6f07245..587be48 100644
+--- a/node_modules/@szmarczak/http-timer/dist/source/index.js
++++ b/node_modules/@szmarczak/http-timer/dist/source/index.js
+@@ -2,7 +2,8 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ const defer_to_connect_1 = require("defer-to-connect");
+ const util_1 = require("util");
+-const nodejsMajorVersion = Number(process.versions.node.split('.')[0]);
++console.log(`==nodejsMajorVersion:`, process)
++const nodejsMajorVersion = 14;//process ? Number(process.versions.node.split('.')[0]) : 0;
+ const timer = (request) => {
+     if (request.timings) {
+         return request.timings;
+@@ -48,7 +49,7 @@ const timer = (request) => {
+         timings.abort = Date.now();
+         // Let the `end` response event be responsible for setting the total phase,
+         // unless the Node.js major version is >= 13.
+-        if (!timings.response || nodejsMajorVersion >= 13) {
++        if (!timings.response || nodejsMajorVersion && nodejsMajorVersion >= 13) {
+             timings.phases.total = Date.now() - timings.start;
+         }
+     };

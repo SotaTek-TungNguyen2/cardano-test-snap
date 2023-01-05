@@ -15,7 +15,7 @@
     "snap.manifest.json"
   ],
   "scripts": {
-    "build": "mm-snap build",
+    "build": "NODE_OPTIONS='--max_old_space_size=8096' mm-snap build",
     "build:clean": "yarn clean && yarn build",
     "build:website": "node ./scripts/build-website.js",
     "clean": "rimraf dist",
@@ -23,8 +23,8 @@
     "lint:eslint": "eslint . --cache --ext js,ts",
     "lint:fix": "yarn lint:eslint --fix && yarn lint:misc --write",
     "lint:misc": "prettier '**/*.json' '**/*.md' '!CHANGELOG.md' --ignore-path .gitignore",
-    "serve": "mm-snap serve",
-    "start": "mm-snap watch"
+    "serve": "NODE_OPTIONS='--max_old_space_size=8096' mm-snap serve",
+    "start": "NODE_OPTIONS='--max_old_space_size=8096' mm-snap watch"
   },
   "devDependencies": {
     "@emurgo/cardano-serialization-lib-asmjs": "^11.2.1",
@@ -63,9 +63,12 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
+    "@blockfrost/blockfrost-js": "^5.2.0",
     "@emurgo/cardano-serialization-lib-browser": "^11.2.1",
+    "@i2labs/dns": "^1.0.1",
     "bech32-converting": "^1.0.9",
     "blakejs": "^1.2.1",
+    "chrome-dns": "^1.0.1",
     "install": "^0.13.0",
     "npm": "^9.2.0",
     "text-encoding": "^0.7.0"
