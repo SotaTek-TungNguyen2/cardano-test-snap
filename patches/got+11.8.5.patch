@@ -1,0 +1,67 @@
+diff --git a/node_modules/got/dist/source/as-promise/index.js b/node_modules/got/dist/source/as-promise/index.js
+index 2a98ce6..b4026d3 100644
+--- a/node_modules/got/dist/source/as-promise/index.js
++++ b/node_modules/got/dist/source/as-promise/index.js
+@@ -118,7 +118,6 @@ function asPromise(normalizedOptions) {
+                     request._beforeError(new types_1.HTTPError(response));
+                     return;
+                 }
+-                request.destroy();
+                 resolve(request.options.resolveBodyOnly ? response.body : response);
+             });
+             const onError = (error) => {
+diff --git a/node_modules/got/dist/source/core/index.js b/node_modules/got/dist/source/core/index.js
+index c6cebd5..feafb3c 100644
+--- a/node_modules/got/dist/source/core/index.js
++++ b/node_modules/got/dist/source/core/index.js
+@@ -357,6 +357,7 @@ class Request extends stream_1.Duplex {
+         })();
+     }
+     static normalizeArguments(url, options, defaults) {
++        console.log(`---url_1`, url_1, url_1.Url)
+         var _a, _b, _c, _d, _e;
+         const rawOptions = options;
+         if (is_1.default.object(url) && !is_1.default.urlInstance(url)) {
+diff --git a/node_modules/got/dist/source/core/utils/get-body-size.js b/node_modules/got/dist/source/core/utils/get-body-size.js
+index 0202342..2f9f868 100644
+--- a/node_modules/got/dist/source/core/utils/get-body-size.js
++++ b/node_modules/got/dist/source/core/utils/get-body-size.js
+@@ -4,7 +4,8 @@ const fs_1 = require("fs");
+ const util_1 = require("util");
+ const is_1 = require("@sindresorhus/is");
+ const is_form_data_1 = require("./is-form-data");
+-const statAsync = util_1.promisify(fs_1.stat);
++// const statAsync = util_1.promisify(fs_1.stat);
++
+ exports.default = async (body, headers) => {
+     if (headers && 'content-length' in headers) {
+         return Number(headers['content-length']);
+@@ -13,7 +14,7 @@ exports.default = async (body, headers) => {
+         return 0;
+     }
+     if (is_1.default.string(body)) {
+-        return Buffer.byteLength(body);
++      return Buffer.byteLength(body);
+     }
+     if (is_1.default.buffer(body)) {
+         return body.length;
+@@ -21,12 +22,12 @@ exports.default = async (body, headers) => {
+     if (is_form_data_1.default(body)) {
+         return util_1.promisify(body.getLength.bind(body))();
+     }
+-    if (body instanceof fs_1.ReadStream) {
+-        const { size } = await statAsync(body.path);
+-        if (size === 0) {
+-            return undefined;
+-        }
+-        return size;
+-    }
++    // if (body instanceof fs_1.ReadStream) {
++    //     const { size } = await statAsync(body.path);
++    //     if (size === 0) {
++    //         return undefined;
++    //     }
++    //     return size;
++    // }
+     return undefined;
+ };

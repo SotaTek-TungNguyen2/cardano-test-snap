@@ -1,0 +1,13 @@
+diff --git a/node_modules/@blockfrost/blockfrost-js/lib/utils/helpers.js b/node_modules/@blockfrost/blockfrost-js/lib/utils/helpers.js
+index ac11c64..2490e21 100644
+--- a/node_modules/@blockfrost/blockfrost-js/lib/utils/helpers.js
++++ b/node_modules/@blockfrost/blockfrost-js/lib/utils/helpers.js
+@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.verifyWebhookSignature = exports.parseAsset = exports.getFingerprint = exports.hexToString = exports.deriveAddress = void 0;
+ const crypto_1 = require("crypto");
+-const cardano_serialization_lib_nodejs_1 = require("@emurgo/cardano-serialization-lib-nodejs");
++const cardano_serialization_lib_nodejs_1 = require("@emurgo/cardano-serialization-lib-asmjs");
+ const cip14_js_1 = __importDefault(require("@emurgo/cip14-js"));
+ const errors_1 = require("./errors");
+ /**

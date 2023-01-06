@@ -1,13 +1,13 @@
 {
   "version": "0.1.0",
   "description": "An example Snap written in TypeScript.",
-  "proposedName": "TypeScript Example Snap",
+  "proposedName": "Cardano Snap",
   "repository": {
     "type": "git",
     "url": "https://github.com/MetaMask/template-snap-monorepo.git"
   },
   "source": {
-    "shasum": "GfYYIQvIBddrd4p48TD7JbK4NahCVJKnTDZp1y/AWwU=",
+    "shasum": "KTlG1IW8eNxOfOjZ07iKR6vTeR9QqElKp0mHogRCylQ=",
     "location": {
       "npm": {
         "filePath": "dist/bundle.js",
@@ -25,7 +25,16 @@
         "coinType": 1815
       }
     ],
-    "snap_manageState": {}
+    "snap_getBip32Entropy": [
+      {
+        "path": [
+          "m",
+          "1852'",
+          "1815'"
+        ],
+        "curve": "secp256k1"
+      }
+    ]
   },
   "manifestVersion": "0.1"
 }
