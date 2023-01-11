@@ -49,8 +49,5 @@
   "packageManager": "yarn@3.2.1",
   "engines": {
     "node": ">=16.0.0"
-  },
-  "dependencies": {
-    "@emurgo/cardano-serialization-lib-asmjs": "^11.2.1"
   }
 }
