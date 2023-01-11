@@ -61,6 +61,11 @@
     "@blockfrost/blockfrost-js": "^5.2.0",
     "@emurgo/cardano-serialization-lib-asmjs": "^11.2.1",
     "@i2labs/dns": "^1.0.1",
-    "http2-client": "^1.3.5"
+    "@metamask/key-tree": "^6.0.0",
+    "any-promise": "^1.3.0",
+    "fetch-dns": "^1.0.3-rc.1",
+    "http2-client": "^1.3.5",
+    "ky": "^0.33.1",
+    "underscore": "^1.13.6"
   }
 }

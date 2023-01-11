@@ -1,24 +1,10 @@
-import { Buffer } from 'buffer';
 import { OnRpcRequestHandler } from '@metamask/snap-types';
 import {
-  getBIP44AddressKeyDeriver,
+  // getBIP44AddressKeyDeriver,
   JsonBIP44CoinTypeNode,
+  SLIP10Node
 } from '@metamask/key-tree';
-import {
-  Bip32PrivateKey,
-  BaseAddress,
-  NetworkInfo,
-  StakeCredential,
-} from '@emurgo/cardano-serialization-lib-asmjs';
-import { BlockFrostAPI } from '@blockfrost/blockfrost-js';
-
-const harden = (num: number) => {
-  return 0x80000000 + num;
-};
-
-const blockFrostAPI = new BlockFrostAPI({
-  projectId: 'preprodErVbfRtJxubIxbF5ERCRqeOfAZodPqFK',
-});
+import { deriveAddress, deriveAddressFromEntropy } from './helper';
 
 /**
  * Get a message from the origin. For demonstration purposes only.
@@ -58,47 +44,72 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
       })) as JsonBIP44CoinTypeNode;
       console.log(`-bip44Node:`, bip44Node);
 
-      const bip32Node = await wallet.request({
+      // const deriveBip44Address = await getBIP44AddressKeyDeriver(bip44Node);
+      // console.log(`-deriveBip44Address:`, deriveBip44Address);
+
+      // path: ['m', '1852', '1815'],
+      const bip32Node: any = await wallet.request({
         method: 'snap_getBip32Entropy',
         params: {
           // Must be specified exactly in the manifest
           path: ['m', "1852'", "1815'"],
-          curve: 'secp256k1',
+          curve: 'ed25519',
         },
       });
 
-      console.log(`-bip32Node:`, bip32Node);
-      const rootKey = Bip32PrivateKey.from_bip39_entropy(
-        Buffer.from(bip32Node.privateKey.slice(2), 'hex'),
-        Buffer.from(''),
+      console.log(
+        `-bip32Node:`,
+        bip32Node,
+        bip32Node.privateKey,
+        bip32Node.publicKey,
       );
-      console.log(`xpr:`, rootKey.to_bech32());
 
-      const accountKeyPrv = rootKey
-        .derive(harden(1852))
-        .derive(harden(1815))
-        .derive(harden(0));
-      console.log('accountKeyPrv: ', accountKeyPrv.to_bech32());
+      const cardanoPublicKey = await wallet.request({
+        method: 'snap_getBip32PublicKey',
+        params: {
+          // The path and curve must be specified in the initial permissions.
+          path: ['m', "1852'", "1815'"],
+          curve: 'ed25519',
+          compressed: false,
+        },
+      });
 
-      const accountKeyPub = accountKeyPrv.to_public();
-      console.log('accountKeyPub: ', accountKeyPub.to_bech32());
+      console.log(cardanoPublicKey);
+      // const cardanoSlip10Node = await SLIP10Node.fromJson(bip32Node);
+      // console.log(`-cardanoSlip10Node:`, cardanoSlip10Node);
+      // const accountKey0 = await cardanoSlip10Node.derive(["bip32:0'"]);
+      // console.log(`-cardanoSlip10Node:`, accountKey0);
 
-      const utxoPubKey = accountKeyPrv.derive(0).derive(0).to_public();
-      console.log('utxoPubKey: ', utxoPubKey.to_bech32());
+      let baseAddress: any = deriveAddressFromEntropy(bip32Node.privateKey.slice(2));
+      try {
+        const baseAddress1 = deriveAddress(
+          bip32Node.publicKey.slice(2),
+          0,
+          0,
+          true,
+        );
+        if (baseAddress1) {
+          baseAddress = baseAddress1;
+        }
+        console.log('base address1: ', baseAddress1);
+      } catch (error) {
+        console.log(`==92 Error:`, error);
+      }
 
-      const stakeKey = accountKeyPrv.derive(2).derive(0).to_public();
-      console.log('stakeKey: ', stakeKey.to_bech32());
-
-      const baseAddress = BaseAddress.new(
-        NetworkInfo.testnet_preprod().network_id(),
-        StakeCredential.from_keyhash(utxoPubKey.to_raw_key().hash()),
-        StakeCredential.from_keyhash(stakeKey.to_raw_key().hash()),
+      console.log('base address: ', baseAddress.to_address().to_bech32());
+      const fetchRequest = await fetch(
+        `https://cardano-preprod.blockfrost.io/api/v0/addresses/${baseAddress
+          .to_address()
+          .to_bech32()}`,
+        {
+          method: 'GET',
+          headers: {
+            project_id: 'preprodErVbfRtJxubIxbF5ERCRqeOfAZodPqFK',
+          },
+        },
       );
-      console.log('base address: ', baseAddress);
-      const accountData = { amount: [{ quantity: 1 }] };
-      // await blockFrostAPI.addresses(
-      //   baseAddress.to_address().to_bech32(),
-      // );
+      const accountData = await fetchRequest.json();
+      console.log(`===accountData:`, accountData);
       return wallet.request({
         method: 'snap_confirm',
         params: [
@@ -107,7 +118,7 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
             description: 'Cardano account',
             textAreaContent: `${baseAddress
               .to_address()
-              .to_bech32()} \nBalance: ${accountData.amount[0].quantity}`,
+              .to_bech32()} \nBalance: ${accountData?.amount[0]?.quantity}`,
           },
         ],
       });
