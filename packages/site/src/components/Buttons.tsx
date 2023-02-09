@@ -98,6 +98,10 @@ export const QueryBalanceButton = (props: ComponentProps<typeof Button>) => {
   return <Button {...props}>Query</Button>;
 };
 
+export const TransferButton = (props: ComponentProps<typeof Button>) => {
+  return <Button {...props}>Transfer</Button>;
+};
+
 export const HeaderButtons = ({
   state,
   onConnectClick,

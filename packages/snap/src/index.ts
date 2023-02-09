@@ -1,6 +1,14 @@
 import { OnRpcRequestHandler } from '@metamask/snap-types';
-import { deriveAddressFromEntropy } from './helper';
-
+import { deriveAddressFromEntropy, makeRequest } from './utils';
+import { getAccount } from './account';
+import {
+  getProtocolParameter,
+  retrieveUTxO,
+  draftTransaction,
+  prepareOutput,
+  signTransaction,
+  submitTx,
+} from './transaction';
 /**
  * Handle incoming JSON-RPC requests, sent through `wallet_invokeSnap`.
  *
@@ -16,80 +24,110 @@ export const onRpcRequest: OnRpcRequestHandler = async ({
   origin,
   request,
 }) => {
+  // const state = await wallet.request({
+  //   method: 'snap_manageState',
+  //   params: ['get'],
+  // });
+  // if (!state) {
+  //   await wallet.request({
+  //     method: 'snap_manageState',
+  //     params: ['update', EmptyMetamaskState()],
+  //   });
+  // }
+
   switch (request.method) {
     case 'query_balance': {
-      const bip32Node: any = await wallet.request({
-        method: 'snap_getBip32Entropy',
-        params: {
-          // Must be specified exactly in the manifest
-          path: ['m', "1852'", "1815'"],
-          curve: 'ed25519',
-        },
-      });
+      try {
+        const { baseAddress }: any = await getAccount();
 
-      // console.log(
-      //   `-bip32Node:`,
-      //   bip32Node,
-      //   bip32Node.privateKey,
-      //   bip32Node.publicKey,
-      // );
+        const accountData = await makeRequest({
+          endpoint: `/addresses/${baseAddress}`,
+        });
+        const amountText = accountData?.amount
+          ? `${accountData?.amount[0]?.quantity} ${accountData?.amount[0]?.unit}`
+          : 0;
+        console.log(`===accountData:`, accountData);
+        return wallet.request({
+          method: 'snap_confirm',
+          params: [
+            {
+              prompt: origin,
+              description: 'Cardano account',
+              textAreaContent: `Address: ${baseAddress} \nBalance: ${amountText}`,
+            },
+          ],
+        });
+      } catch (error) {
+        return wallet.request({
+          method: 'snap_confirm',
+          params: [
+            {
+              prompt: origin,
+              description: 'Error',
+              textAreaContent: new Error(error).message,
+            },
+          ],
+        });
+      }
+    }
 
-      // const cardanoPublicKey = await wallet.request({
-      //   method: 'snap_getBip32PublicKey',
-      //   params: {
-      //     // The path and curve must be specified in the initial permissions.
-      //     path: ['m', "1852'", "1815'"],
-      //     curve: 'ed25519',
-      //     compressed: false,
-      //   },
-      // });
+    case 'transfer_token': {
+      try {
+        const { baseAddress: sendAddr, signKey }: any = await getAccount();
+        const receiveAddr = request.params['receiveAddr'];
+        const amount = request.params['amount'];
+        const parameters = await getProtocolParameter();
+        const utxo = await retrieveUTxO(sendAddr);
+        const draftTrx = draftTransaction(parameters);
+        draftTrx.set_ttl(parameters.slot + 7200);
+        const { txBody, txHash } = prepareOutput(
+          sendAddr,
+          receiveAddr,
+          draftTrx,
+          utxo,
+          amount,
+        );
 
-      // console.log(cardanoPublicKey);
-
-      const baseAddress: any = deriveAddressFromEntropy(
-        bip32Node.privateKey.slice(2),
-      );
-      // try {
-      //   const baseAddress1 = deriveAddress(
-      //     bip32Node.publicKey.slice(2),
-      //     0,
-      //     0,
-      //     true,
-      //   );
-      //   if (baseAddress1) {
-      //     baseAddress = baseAddress1;
-      //   }
-      //   console.log('base address1: ', baseAddress1);
-      // } catch (error) {
-      //   console.log(`==92 Error:`, error);
-      // }
-
-      console.log('base address: ', baseAddress.to_address().to_bech32());
-      const fetchRequest = await fetch(
-        `https://cardano-preprod.blockfrost.io/api/v0/addresses/${baseAddress
-          .to_address()
-          .to_bech32()}`,
-        {
-          method: 'GET',
-          headers: {
-            project_id: 'preprodErVbfRtJxubIxbF5ERCRqeOfAZodPqFK',
-          },
-        },
-      );
-      const accountData = await fetchRequest.json();
-      console.log(`===accountData:`, accountData);
-      return wallet.request({
-        method: 'snap_confirm',
-        params: [
-          {
-            prompt: origin,
-            description: 'Cardano account',
-            textAreaContent: `Address: ${baseAddress
-              .to_address()
-              .to_bech32()} \nBalance: ${accountData?.amount[0]?.quantity}`,
-          },
-        ],
-      });
+        const transaction = signTransaction(txBody, signKey);
+        const result = await wallet.request({
+          method: 'snap_confirm',
+          params: [
+            {
+              prompt: `Do you want to transfer?`,
+              description: 'Transfer token',
+              textAreaContent: `*Detail:\nAmount: ${amount} lovelace \nReceive address: ${receiveAddr}`,
+            },
+          ],
+        });
+        if (result) {
+          await submitTx(transaction.to_bytes());
+          const message = `Transaction successfully submitted: ${txHash}`;
+          console.log(message);
+          return wallet.request({
+            method: 'snap_confirm',
+            params: [
+              {
+                prompt: `Transfer status`,
+                description: 'Transaction successfully submitted',
+                textAreaContent: `TX hash: ${txHash}`,
+              },
+            ],
+          });
+        }
+        return result;
+      } catch (error) {
+        console.log(`Transfer error:`, new Error(error).message);
+        return wallet.request({
+          method: 'snap_confirm',
+          params: [
+            {
+              prompt: `Transfer status`,
+              description: 'Failed to submit transaction',
+              textAreaContent: new Error(error).message,
+            },
+          ],
+        });
+      }
     }
     default:
       throw new Error('Method not found.');

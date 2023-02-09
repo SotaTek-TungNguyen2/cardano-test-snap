@@ -72,4 +72,17 @@ export const queryBalance = async () => {
   });
 };
 
+export const transferToken = async (receiveAddr: string, amount: string) => {
+  await window.ethereum.request({
+    method: 'wallet_invokeSnap',
+    params: [
+      defaultSnapOrigin,
+      {
+        method: 'transfer_token',
+        params: { receiveAddr, amount },
+      },
+    ],
+  });
+};
+
 export const isLocalSnap = (snapId: string) => snapId.startsWith('local:');

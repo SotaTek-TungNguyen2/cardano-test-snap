@@ -94,14 +94,16 @@ export const deriveAddressFromEntropy = (entropy: string) => {
 
   const accountKeyPub = accountKeyPrv.to_public();
 
-  const utxoPubKey = accountKeyPrv.derive(0).derive(0).to_public();
+  const utxoKey = accountKeyPrv.derive(0).derive(0);
+
+  const utxoPubKey = utxoKey.to_public();
 
   const stakeKey = accountKeyPrv.derive(2).derive(0).to_public();
 
   // console.log(`rootKey:`, rootKey.to_bech32());
   // console.log('stakeKey: ', stakeKey.to_bech32());
   // console.log('accountKeyPrv: ', accountKeyPrv.to_bech32());
-  console.log('accountKeyPub: ', accountKeyPub.to_bech32());
+  // console.log('accountKeyPub: ', accountKeyPub.to_bech32());
   // console.log('utxoPubKey: ', utxoPubKey.to_bech32());
 
   const baseAddress = BaseAddress.new(
@@ -109,5 +111,36 @@ export const deriveAddressFromEntropy = (entropy: string) => {
     StakeCredential.from_keyhash(utxoPubKey.to_raw_key().hash()),
     StakeCredential.from_keyhash(stakeKey.to_raw_key().hash()),
   );
-  return baseAddress;
+  return {
+    baseAddress: baseAddress.to_address().to_bech32(),
+    signKey: utxoKey.to_raw_key(),
+  };
+};
+
+export const makeRequest = async ({
+  body,
+  endpoint = '',
+  headers = {},
+  method = 'GET',
+}: {
+  body?: any;
+  endpoint?: string;
+  headers?: any;
+  method?: string;
+}) => {
+  try {
+    return await (
+      await fetch(`https://cardano-preprod.blockfrost.io/api/v0${endpoint}`, {
+        headers: {
+          project_id: 'preprodErVbfRtJxubIxbF5ERCRqeOfAZodPqFK',
+          ...headers,
+        },
+        method,
+        body,
+      })
+    ).json();
+  } catch (err) {
+    console.log(`---request error:`, err);
+    return null;
+  }
 };
