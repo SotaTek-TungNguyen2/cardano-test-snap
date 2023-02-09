@@ -1,10 +1,11 @@
-import { useContext } from 'react';
+import { useContext, useState, useCallback } from 'react';
 import styled from 'styled-components';
 import { MetamaskActions, MetaMaskContext } from '../hooks';
 import {
   connectSnap,
   getSnap,
   queryBalance,
+  transferToken,
   shouldDisplayReconnectButton,
 } from '../utils';
 import {
@@ -13,6 +14,7 @@ import {
   ReconnectButton,
   QueryBalanceButton,
   Card,
+  TransferButton,
 } from '../components';
 
 const Container = styled.div`
@@ -101,6 +103,8 @@ const ErrorMessage = styled.div`
 
 const Index = () => {
   const [state, dispatch] = useContext(MetaMaskContext);
+  const [receiveAddr, setReceiveAddr] = useState<string>('');
+  const [amount, setAmount] = useState<string>('');
 
   const handleConnectClick = async () => {
     try {
@@ -125,6 +129,29 @@ const Index = () => {
       dispatch({ type: MetamaskActions.SetError, payload: e });
     }
   };
+
+  const handleTransferClick = async () => {
+    try {
+      await transferToken(receiveAddr, amount);
+    } catch (e) {
+      console.error(e);
+      dispatch({ type: MetamaskActions.SetError, payload: e });
+    }
+  };
+
+  const handleReceiveAddrChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setReceiveAddr(event.target.value);
+    },
+    [setReceiveAddr],
+  );
+
+  const handleAmountChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setAmount(event.target.value);
+    },
+    [setAmount],
+  );
 
   return (
     <Container>
@@ -200,6 +227,30 @@ const Index = () => {
             Boolean(state.installedSnap) &&
             !shouldDisplayReconnectButton(state.installedSnap)
           }
+        />
+        <Card
+          content={{
+            title: 'Transfer',
+            description: 'Transfer token',
+            inputs: [
+              <input
+                placeholder="Receive address"
+                style={{ margin: '1rem', padding: '0.5rem' }}
+                onChange={handleReceiveAddrChange}
+              ></input>,
+              <input
+                placeholder="Amount"
+                style={{ margin: '1rem', padding: '0.5rem' }}
+                onChange={handleAmountChange}
+              ></input>,
+            ],
+            button: (
+              <TransferButton
+                onClick={handleTransferClick}
+                disabled={!state.installedSnap}
+              />
+            ),
+          }}
         />
         <Notice>
           <p>

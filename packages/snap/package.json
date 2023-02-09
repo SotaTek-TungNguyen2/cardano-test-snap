@@ -58,6 +58,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "dependencies": {
-    "@emurgo/cardano-serialization-lib-asmjs": "^11.2.1"
+    "@emurgo/cardano-serialization-lib-asmjs": "^11.2.1",
+    "@metamask/key-tree": "^6.1.0"
   }
 }
